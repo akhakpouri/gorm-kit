@@ -22,8 +22,10 @@ gorm-kit/
 ├── database/        # driver-agnostic core
 │   ├── config.go    # DbConfig struct (json tags for app-side unmarshalling)
 │   └── migrate.go   # Migrate(db, models...) — AutoMigrate wrapper, driver-neutral
-└── pg/              # PostgreSQL-specific
-    └── connect.go   # Connect(cfg) (*gorm.DB, error) — builds DSN, opens GORM
+├── pg/              # PostgreSQL-specific
+│   └── connect.go   # Connect(cfg) (*gorm.DB, error) — builds DSN, opens GORM
+└── my/              # MySQL-specific
+    └── connect.go   # Connect(cfg) — same signature; ignores Schema (MySQL has none)
 ```
 
 **Why this split:** only `Connect`/DSN construction is driver-specific. `Migrate`
@@ -53,7 +55,10 @@ These are the rules that keep this a *library*, not an application. Hold the lin
 type DbConfig struct { Host, User, DbName string; Port int; Password, SSLMode, Schema string }
 func Migrate(db *gorm.DB, models ...any) error   // AutoMigrate wrapper
 
-// pg
+// pg (PostgreSQL)
+func Connect(cfg database.DbConfig) (*gorm.DB, error)
+
+// my (MySQL) — same signature; cfg.Schema and cfg.SSLMode are ignored
 func Connect(cfg database.DbConfig) (*gorm.DB, error)
 ```
 
@@ -73,14 +78,17 @@ Keep the public API stable; breaking changes mean a major bump.
 
 ## Future: multiple drivers
 
-Adding MySQL/SQLite is a **single-module addition** (new `mysql/` package, reuses
-`database.Migrate`), not a restructure. Only graduate to module-per-driver
-(separate `go.mod` each, tag-prefix versioning, a shared `core` module) if BOTH
-hold: (a) ≥2 drivers are actually in use, AND (b) consumers are hurt by carrying
-unused driver deps in their module graph. Until then, one module is simpler to
+MySQL now ships as a sibling package (`my/`) in the single module, reusing
+`database.Migrate` unchanged — exactly the additive path the layout was designed
+for. SQL Server and Oracle follow the same pattern: a new package, no restructure.
+
+Stay single-module. Now that two drivers exist, the remaining gate for splitting
+into module-per-driver (separate `go.mod` each, tag-prefix versioning, a shared
+`core` module) is whether consumers are actually hurt by carrying unused driver
+deps in their module graph. Until that pain is real, one module is simpler to
 version and consume. Do not split speculatively.
 
 ## License
 
-MIT — matches upstream GORM and its Postgres driver, and keeps the library
+MIT — matches upstream GORM and its Postgres/MySQL drivers, and keeps the library
 frictionless to embed anywhere (including private projects).

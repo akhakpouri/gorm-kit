@@ -3,8 +3,8 @@
 [![Go Reference](https://pkg.go.dev/badge/github.com/akhakpouri/gorm-kit.svg)](https://pkg.go.dev/github.com/akhakpouri/gorm-kit)
 [![CI](https://github.com/akhakpouri/gorm-kit/actions/workflows/ci.yml/badge.svg)](https://github.com/akhakpouri/gorm-kit/actions/workflows/ci.yml)
 
-Reusable GORM connection + migration helpers for Go services. PostgreSQL today;
-MySQL, SQL Server, and Oracle planned.
+Reusable GORM connection + migration helpers for Go services. PostgreSQL and
+MySQL today; SQL Server and Oracle planned.
 
 It exists so connection setup and migrations don't get hand-rewritten in every
 new project. Scope is deliberately narrow: **connection + migration helpers
@@ -55,6 +55,11 @@ The app loads its own config however it likes (file, env, flags) and hands over
 a filled `DbConfig`. The `json` tags on `DbConfig` are a convenience for apps
 that unmarshal from JSON.
 
+For MySQL, import `.../my` and call `my.Connect(cfg)` — same signature. Note that
+`cfg.Schema` and `cfg.SSLMode` are ignored: MySQL has no schema-vs-database
+distinction (its "schema" is a synonym for "database"), so `cfg.DbName` is the
+schema.
+
 ## Public API
 
 ```go
@@ -67,6 +72,9 @@ type DbConfig struct {
 func Migrate(db *gorm.DB, models ...any) error // AutoMigrate wrapper
 
 // pg (PostgreSQL)
+func Connect(cfg database.DbConfig) (*gorm.DB, error)
+
+// my (MySQL) — same signature; cfg.Schema and cfg.SSLMode are ignored
 func Connect(cfg database.DbConfig) (*gorm.DB, error)
 ```
 
@@ -85,11 +93,12 @@ func Connect(cfg database.DbConfig) (*gorm.DB, error)
 ```
 gorm-kit/
 ├── database/   # driver-agnostic core: DbConfig, Migrate
-└── pg/         # PostgreSQL: Connect (DSN + gorm.Open)
+├── pg/         # PostgreSQL: Connect (DSN + gorm.Open)
+└── my/         # MySQL: Connect (DSN + gorm.Open)
 ```
 
-Adding a driver later = a new sibling package (e.g. `mysql/`) that reuses
-`database.Migrate` unchanged.
+Each driver is a sibling package that reuses `database.Migrate` unchanged, so
+adding the next one (SQL Server, Oracle) needs no restructuring.
 
 ## License
 
