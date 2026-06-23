@@ -1,5 +1,8 @@
 # gorm-kit
 
+[![Go Reference](https://pkg.go.dev/badge/github.com/akhakpouri/gorm-kit.svg)](https://pkg.go.dev/github.com/akhakpouri/gorm-kit)
+[![CI](https://github.com/akhakpouri/gorm-kit/actions/workflows/ci.yml/badge.svg)](https://github.com/akhakpouri/gorm-kit/actions/workflows/ci.yml)
+
 Reusable GORM connection + migration helpers for Go services. PostgreSQL today;
 MySQL, SQL Server, and Oracle planned.
 
@@ -11,7 +14,7 @@ stay in the consuming application.
 ## Install
 
 ```sh
-go get github.com/akhakpouri/gorm-kit
+go get github.com/akhakpouri/gorm-kit@latest   # or pin: @v0.1.0
 ```
 
 ## Usage
